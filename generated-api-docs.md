@@ -1,66 +1,85 @@
-### Analysis of the provided code
+**Analysis of backend source code:**
 
-The code is a simple Express backend with 4 API endpoints related to user management.
+1. API endpoints:
+   - GET /users
+   - POST /users
+   - PUT /users/:id
+   - DELETE /users/:id
 
----
+2. HTTP methods:
+   - GET, POST, PUT, DELETE as above
 
-## A) API endpoint list
+3. Path parameters:
+   - `id` in PUT /users/:id and DELETE /users/:id
 
-| Endpoint       | HTTP Method | Path Parameters | Query Parameters | Request Body         | Response                         | Status Codes | Authentication |
-|----------------|-------------|-----------------|------------------|----------------------|---------------------------------|--------------|----------------|
-| /users         | GET         | None            | None             | None                 | `{ users: Array }`               | 200          | No             |
-| /users         | POST        | None            | None             | Not detailed         | `{ message: String }`            | 200          | No             |
-| /users/:id     | PUT         | id (string)     | None             | Not detailed         | `{ message: String }`            | 200          | No             |
-| /users/:id     | DELETE      | id (string)     | None             | None                 | `{ message: String }`            | 200          | No             |
+4. Query parameters:
+   - None explicitly defined
 
----
+5. Request body schema:
+   - Not explicitly defined or parsed by `express.json()` middleware in the code (missing)
+   - Assumed for POST and PUT as typical user data (e.g. user object)
 
-## B) Short developer documentation
+6. Response structure:
+   - GET /users returns `{ users: [] }` (an array of users)
+   - POST /users returns `{ message: "User created" }`
+   - PUT /users/:id returns `{ message: "User updated" }`
+   - DELETE /users/:id returns `{ message: "User deleted" }`
 
-### 1. GET /users  
-Fetch the list of users.  
-- **Request parameters:** None  
-- **Response:** JSON object containing a `users` array (empty in current implementation).  
-- **Status code:** 200 OK  
+7. Status codes:
+   - The code always uses default, i.e., 200 OK implicitly
 
-### 2. POST /users  
-Create a new user.  
-- **Request body:** Not specified (assumed JSON with user info).  
-- **Response:** JSON object with a `message` confirming creation.  
-- **Status code:** 200 OK  
-
-### 3. PUT /users/:id  
-Update an existing user by `id`.  
-- **Path parameter:** `id` - the ID of the user to update.  
-- **Request body:** Not specified (assumed JSON with update info).  
-- **Response:** JSON object with a `message` confirming update.  
-- **Status code:** 200 OK  
-
-### 4. DELETE /users/:id  
-Delete a user by `id`.  
-- **Path parameter:** `id` - the ID of the user to delete.  
-- **Response:** JSON object with a `message` confirming deletion.  
-- **Status code:** 200 OK  
-
-### Authentication  
-No authentication is present in the current implementation.
+8. Authentication requirements:
+   - None present or indicated
 
 ---
 
-## C) OpenAPI 3.0 YAML specification
+# A) Clean API endpoint list
+
+| Endpoint         | HTTP Method | Path Parameters | Query Parameters | Request Body        | Response                      | Status Codes | Auth Required |
+|------------------|-------------|-----------------|------------------|---------------------|-------------------------------|--------------|---------------|
+| /users           | GET         | None            | None             | None                | `{ users: Array }`             | 200          | No            |
+| /users           | POST        | None            | None             | User object (not defined) | `{ message: "User created" }` | 200          | No            |
+| /users/:id       | PUT         | id (string)     | None             | User object (not defined) | `{ message: "User updated" }` | 200          | No            |
+| /users/:id       | DELETE      | id (string)     | None             | None                | `{ message: "User deleted" }` | 200          | No            |
+
+---
+
+# B) Short developer documentation
+
+## Users API
+
+- **GET /users**  
+  Retrieves a list of users. Returns a JSON object containing an array of users. Currently, this always returns an empty array.
+
+- **POST /users**  
+  Creates a new user. Expects user data in the request body (schema not defined). Returns a confirmation message.
+
+- **PUT /users/:id**  
+  Updates the user identified by `id`. Expects updated user data in the request body (schema not defined). Returns a confirmation message.
+
+- **DELETE /users/:id**  
+  Deletes the user identified by `id`. Returns a confirmation message.
+
+No authentication or authorization is required based on the current implementation.
+
+Status codes are always 200 OK for all responses without error handling.
+
+---
+
+# C) OpenAPI 3.0 YAML specification
 
 ```yaml
 openapi: 3.0.3
 info:
-  title: User Management API
+  title: Users API
   version: 1.0.0
 paths:
   /users:
     get:
-      summary: Get list of users
+      summary: Retrieves all users
       responses:
         '200':
-          description: Successful response with users list
+          description: List of users
           content:
             application/json:
               schema:
@@ -70,19 +89,19 @@ paths:
                     type: array
                     items:
                       type: object
-                example:
-                  users: []
+                    example: []
     post:
-      summary: Create a new user
+      summary: Creates a new user
       requestBody:
-        required: false
+        description: User object to create (schema undefined)
+        required: true
         content:
           application/json:
             schema:
               type: object
       responses:
         '200':
-          description: User created successfully
+          description: User created confirmation
           content:
             application/json:
               schema:
@@ -90,26 +109,27 @@ paths:
                 properties:
                   message:
                     type: string
-                example:
-                  message: User created
+                    example: User created
   /users/{id}:
     put:
-      summary: Update user by ID
+      summary: Update a user by ID
       parameters:
         - name: id
           in: path
+          description: User ID
           required: true
           schema:
             type: string
       requestBody:
-        required: false
+        description: User data to update (schema undefined)
+        required: true
         content:
           application/json:
             schema:
               type: object
       responses:
         '200':
-          description: User updated successfully
+          description: User updated confirmation
           content:
             application/json:
               schema:
@@ -117,19 +137,19 @@ paths:
                 properties:
                   message:
                     type: string
-                example:
-                  message: User updated
+                    example: User updated
     delete:
-      summary: Delete user by ID
+      summary: Delete a user by ID
       parameters:
         - name: id
           in: path
+          description: User ID
           required: true
           schema:
             type: string
       responses:
         '200':
-          description: User deleted successfully
+          description: User deleted confirmation
           content:
             application/json:
               schema:
@@ -137,24 +157,23 @@ paths:
                 properties:
                   message:
                     type: string
-                example:
-                  message: User deleted
+                    example: User deleted
 components: {}
 ```
 
 ---
 
-## D) Example request and response
+# D) Example request and response
 
-### Example: GET /users
+### GET /users
 
-**Request:**  
+Request:  
 ```
 GET /users HTTP/1.1
 Host: example.com
 ```
 
-**Response:**  
+Response:  
 ```json
 {
   "users": []
@@ -163,21 +182,21 @@ Host: example.com
 
 ---
 
-### Example: POST /users
+### POST /users
 
-**Request:**  
-```
+Request:  
+```http
 POST /users HTTP/1.1
 Host: example.com
 Content-Type: application/json
 
 {
-  "name": "Alice",
-  "email": "alice@example.com"
+  "name": "John Doe",
+  "email": "john@example.com"
 }
 ```
 
-**Response:**  
+Response:  
 ```json
 {
   "message": "User created"
@@ -186,20 +205,21 @@ Content-Type: application/json
 
 ---
 
-### Example: PUT /users/123
+### PUT /users/123
 
-**Request:**  
-```
+Request:  
+```http
 PUT /users/123 HTTP/1.1
 Host: example.com
 Content-Type: application/json
 
 {
-  "email": "alice_new@example.com"
+  "name": "John Updated",
+  "email": "john.updated@example.com"
 }
 ```
 
-**Response:**  
+Response:  
 ```json
 {
   "message": "User updated"
@@ -208,15 +228,15 @@ Content-Type: application/json
 
 ---
 
-### Example: DELETE /users/123
+### DELETE /users/123
 
-**Request:**  
+Request:  
 ```
 DELETE /users/123 HTTP/1.1
 Host: example.com
 ```
 
-**Response:**  
+Response:  
 ```json
 {
   "message": "User deleted"
@@ -225,7 +245,7 @@ Host: example.com
 
 ---
 
-## Mermaid sequence diagram
+# Mermaid sequence diagram
 
 ```mermaid
 sequenceDiagram
@@ -233,27 +253,23 @@ sequenceDiagram
     participant Server
     participant Database
 
-    Client->>Server: Request /users [GET, POST]
-    alt GET /users
-        Server->>Database: Query users
-        Database-->>Server: Return user list (empty array)
-        Server-->>Client: JSON { users: [] }
-    else POST /users
-        Client->>Server: Body JSON user data
-        Server->>Database: Insert new user
-        Database-->>Server: Confirm insertion
-        Server-->>Client: JSON { message: "User created" }
-    end
+    Client->>Server: HTTP request (GET /users)
+    Server->>Database: Query users collection
+    Database-->>Server: Return users data (empty array)
+    Server-->>Client: 200 OK + { users: [] }
 
-    Client->>Server: Request /users/:id [PUT, DELETE]
-    alt PUT /users/:id
-        Client->>Server: Body JSON updated user data
-        Server->>Database: Update user by id
-        Database-->>Server: Confirm update
-        Server-->>Client: JSON { message: "User updated" }
-    else DELETE /users/:id
-        Server->>Database: Delete user by id
-        Database-->>Server: Confirm deletion
-        Server-->>Client: JSON { message: "User deleted" }
-    end
+    Client->>Server: HTTP request (POST /users with user data)
+    Server->>Database: Insert new user
+    Database-->>Server: Insert confirmation
+    Server-->>Client: 200 OK + { message: "User created" }
+
+    Client->>Server: HTTP request (PUT /users/:id with updated data)
+    Server->>Database: Update user by id
+    Database-->>Server: Update confirmation
+    Server-->>Client: 200 OK + { message: "User updated" }
+
+    Client->>Server: HTTP request (DELETE /users/:id)
+    Server->>Database: Delete user by id
+    Database-->>Server: Delete confirmation
+    Server-->>Client: 200 OK + { message: "User deleted" }
 ```
